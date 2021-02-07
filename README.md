@@ -1,6 +1,7 @@
 # ampfs : AMP fuse filesystem
 
-This creates a userland filesystem which clones AMP.
+This creates a userland filesystem which gives access to AMP.
+
 Amiga Music Preservation : https://amp.dascene.net
 
 ## Howto
