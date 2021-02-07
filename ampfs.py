@@ -94,7 +94,6 @@ class AMPCache():
                 m = re.match(r".*position=([0-9]*)",a[0].attrib["href"])
                 if not m: break
                 cursor = m.group(1)
-                print(cursor)
                 fin = False
                 url = "https://amp.dascene.net/newresult.php?request=list&search={}&position={}".format(letter,cursor)
 
