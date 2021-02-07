@@ -60,19 +60,17 @@ class AMPCache():
         url = "http://amp.dascene.net/detail.php?detail=modules&view={}".format(authorid)
         html = self.http_retrieve(url)
         root = lxml.html.fromstring(html)
-        for element in root.xpath("//table/tr"):
-            href = element.xpath("td/a[@href]")
-            if href and "href" in href[0].attrib and re.match(r"^downmod\.php",href[0].attrib["href"]):
-                href = href[0].attrib["href"]
-                moduleid = re.match(r".*index=([0-9]*)",href).group(1)
-                td = element.xpath("td")
-                ta = element.xpath("td/a")
-                name = td[2].text + "." + ta[0].text
-                name = name.replace('\xa0',' ')
-                m = re.match(r'([0-9]*)[KkBb]*',td[3].text)
-                if m: size = int(m.group(1)) * 1024
-                else: size = 0
-                yield (moduleid, name, size)
+        for element in root.xpath("//table/tr[td/a[starts-with(@href,\"downmod.php\")]]"):
+            href = element.xpath("td/a[@href]")[0].attrib["href"]
+            moduleid = re.match(r".*index=([0-9]*)",href).group(1)
+            td = element.xpath("td")
+            ta = element.xpath("td/a")
+            name = td[2].text + "." + ta[0].text
+            name = name.replace('\xa0',' ')
+            m = re.match(r'([0-9]*)[KkBb]*',td[3].text)
+            if m: size = int(m.group(1)) * 1024
+            else: size = 0
+            yield (moduleid, name, size)
 
     def getAuthorList(self,letter):
         url = "https://amp.dascene.net/newresult.php?request=list&search={}".format(letter)
@@ -80,7 +78,7 @@ class AMPCache():
         while not fin:
             html = self.http_retrieve(url)
             root = lxml.html.fromstring(html)
-            for element in root.xpath("//table"):
+            for element in root.xpath("//table/tr/td/table"):
                 td = element.xpath("tr/td")
                 if td and td[0].text == "Handle: ":
                    a = td[1].xpath("a")[0]
@@ -91,21 +89,14 @@ class AMPCache():
                    if realname and realname != 'n/a': handle += '('+realname+')'
                    yield (handle, authorid)
             fin = True
-            elements = root.xpath("//table/caption")
-            for e in elements:
-                a = e.xpath("a")
-                if not a: continue
-                for aa in a:
-                    i = aa.xpath("img")
-                    if not i: continue
-                    for ii in i:
-                        if re.match(r".*right.gif",i[0].attrib["src"]):
-                            m = re.match(r".*position=([0-9]*)",aa.attrib["href"])
-                            if not m: break
-                            cursor = m.group(1)
-                            fin = False
-                            url = "https://amp.dascene.net/newresult.php?request=list&search={}&position={}".format(letter,cursor)
-                            break
+            a = root.xpath("//table/caption/a[img[starts-with(@src,\"images/right\")]]")
+            if a:
+                m = re.match(r".*position=([0-9]*)",a[0].attrib["href"])
+                if not m: break
+                cursor = m.group(1)
+                fin = False
+                url = "https://amp.dascene.net/newresult.php?request=list&search={}&position={}".format(letter,cursor)
+                break
 
     def __init__(self,path,reversemode=False):
         self.REVERSE = reversemode
