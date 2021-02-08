@@ -128,7 +128,10 @@ class AMPCache():
     def cacheAuthorDir(self,authorid):
         db = sql.connect(self.dbfile)
         c = db.cursor()
+        names = []
         for moduleid,name,size in self.getAuthorDir(authorid):
+            if name in names: name = name+'-'+moduleid
+            names.append(name)
             c.execute("insert into modules values (?,?,?,?)",(authorid,moduleid,name,size))
             yield moduleid,name
         db.commit()
